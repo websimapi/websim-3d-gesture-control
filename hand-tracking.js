@@ -50,7 +50,7 @@ export function predict() {
             };
             onHandsDetectedCallback(handData);
         } else {
-             onHandsDetectedCallback({ landmarks: [] });
+             onHandsDetectedCallback({ landmarks: [], handedness: [] });
         }
     }
 }
