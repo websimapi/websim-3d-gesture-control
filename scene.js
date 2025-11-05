@@ -1,7 +1,7 @@
 import * as THREE from 'three';
-import { isGrabbing } from './interaction.js';
 
-let scene, camera, renderer, cube;
+let scene, camera, renderer;
+const interactableObjects = [];
 let allHandLandmarks = [];
 const handMeshes = [];
 
@@ -19,11 +19,26 @@ export function init(canvas) {
     scene.add(directionalLight);
 
     // Objects
-    const geometry = new THREE.BoxGeometry();
+    const geonetry = new THREE.BoxGeometry();
     const material = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
-    cube = new THREE.Mesh(geometry, material);
-    cube.position.z = -3;
+    const cube = new THREE.Mesh(geonetry, material);
+    cube.position.set(-2, 0, -3);
     scene.add(cube);
+    interactableObjects.push(cube);
+
+    const sphereGeo = new THREE.SphereGeometry(0.7, 32, 16);
+    const sphereMat = new THREE.MeshStandardMaterial({ color: 0xff00ff });
+    const sphere = new THREE.Mesh(sphereGeo, sphereMat);
+    sphere.position.set(2, 0, -3);
+    scene.add(sphere);
+    interactableObjects.push(sphere);
+
+    const torusGeo = new THREE.TorusGeometry(0.5, 0.2, 16, 100);
+    const torusMat = new THREE.MeshStandardMaterial({ color: 0xffff00 });
+    const torus = new THREE.Mesh(torusGeo, torusMat);
+    torus.position.set(0, 1.5, -3.5);
+    scene.add(torus);
+    interactableObjects.push(torus);
 
     // Camera
     camera.position.z = 5;
@@ -41,7 +56,7 @@ export function init(canvas) {
     
     window.addEventListener('resize', onWindowResize, false);
 
-    return { render, updateHandVisuals, getCube: () => cube, getCamera: () => camera };
+    return { render, updateHandVisuals, getInteractableObjects: () => interactableObjects, getCamera: () => camera };
 }
 
 function onWindowResize() {
@@ -51,10 +66,12 @@ function onWindowResize() {
 }
 
 export function render() {
-    if (!isGrabbing) {
-        cube.rotation.x += 0.005;
-        cube.rotation.y += 0.005;
-    }
+    interactableObjects.forEach(obj => {
+        if (!obj.userData.isGrabbed) {
+            obj.rotation.x += 0.005;
+            obj.rotation.y += 0.005;
+        }
+    });
 
     handMeshes.forEach((mesh, i) => {
         const handIndex = Math.floor(i / 21);

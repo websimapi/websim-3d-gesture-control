@@ -1,6 +1,8 @@
 const loadingIndicator = document.getElementById('loading-indicator');
 const instructions = document.getElementById('instructions');
 const uiContainer = document.getElementById('ui-container');
+const gestureUiLeft = document.getElementById('gesture-ui-left');
+const gestureUiRight = document.getElementById('gesture-ui-right');
 
 export function showLoading() {
     loadingIndicator.classList.remove('hidden');
@@ -25,3 +27,7 @@ export function showError(message) {
     uiContainer.appendChild(errorElement);
 }
 
+export function updateGestureUI(left, right) {
+    gestureUiLeft.textContent = `Left: ${left}`;
+    gestureUiRight.textContent = `Right: ${right}`;
+}

@@ -66,3 +66,20 @@ body {
 .hidden {
     display: none;
 }
+
+#gesture-ui-left, #gesture-ui-right {
+    position: absolute;
+    top: 20px;
+    background-color: rgba(0, 0, 0, 0.7);
+    padding: 10px 15px;
+    border-radius: 8px;
+    font-size: 1.2em;
+}
+
+#gesture-ui-left {
+    left: 20px;
+}
+
+#gesture-ui-right {
+    right: 20px;
+}
