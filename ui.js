@@ -14,6 +14,8 @@ export function hideLoading() {
 
 export function showInstructions() {
     instructions.classList.remove('hidden');
+    instructions.querySelector('p').textContent = 'Use your right hand to control the UI.';
+    instructions.querySelectorAll('p')[1].textContent = 'Point to move cursor, swipe up/down to scroll, pinch to tap buttons.';
 }
 
 export function showError(message) {

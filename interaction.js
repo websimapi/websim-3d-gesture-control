@@ -1,56 +1,62 @@
 import * as THREE from 'three';
 
-let sceneManager;
-const grabState = [
-    { isGrabbing: false, grabbedObject: null, offset: new THREE.Vector3() }, // Hand 0
-    { isGrabbing: false, grabbedObject: null, offset: new THREE.Vector3() }  // Hand 1
-];
+let cursor, scrollContent, buttons;
+let lastTapTime = 0;
+const TAP_COOLDOWN = 300; // ms
 
-export function init(manager) {
-    sceneManager = manager;
+export function init() {
+    cursor = document.getElementById('hand-cursor');
+    scrollContent = document.getElementById('scroll-content');
+    buttons = document.querySelectorAll('.ui-button');
+}
+
+function updateCursor(position) {
+    if (!position) {
+        cursor.style.opacity = '0';
+        return;
+    }
+    cursor.style.opacity = '1';
+    const screenX = window.innerWidth * (1 - position.x); // Mirrored video
+    const screenY = window.innerHeight * position.y;
+    cursor.style.transform = `translate(${screenX}px, ${screenY}px)`;
+    
+    // Check for hover
+    const elementUnderCursor = document.elementFromPoint(screenX, screenY);
+    buttons.forEach(btn => {
+        if (btn === elementUnderCursor) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
 }
 
 export function handleGesture(gesture, landmarks, handIndex) {
-    const state = grabState[handIndex];
-    const camera = sceneManager.getCamera();
-    const interactableObjects = sceneManager.getInteractableObjects();
+    // We'll primarily use the right hand (index 0 if available) for UI control for simplicity
+    // but the cursor will follow whichever hand is detected first.
+    if (handIndex > 0) return;
 
-    if (gesture.name === 'Pinch') {
-        const pinchPosition = landmarks[8]; // Index finger tip
+    updateCursor(gesture.position);
 
-        // Convert normalized 2D screen coordinate to 3D world space
-        const vector = new THREE.Vector3(
-            (pinchPosition.x - 0.5) * 2,
-            -(pinchPosition.y - 0.5) * 2,
-            0.5
-        );
-        vector.unproject(camera);
-
-        const dir = vector.sub(camera.position).normalize();
-        const distance = -camera.position.z / dir.z; // Simplified distance calc
-        const pos = camera.position.clone().add(dir.multiplyScalar(distance));
-
-        if (!state.isGrabbing) {
-            // Check for object to grab
-            for (const obj of interactableObjects) {
-                if (pos.distanceTo(obj.position) < 1.0) { // Grab radius
-                    state.isGrabbing = true;
-                    state.grabbedObject = obj;
-                    obj.userData.isGrabbed = true;
-                    state.offset.subVectors(obj.position, pos);
-                    break; // Grab only one object
+    switch (gesture.name) {
+        case 'Swipe Up':
+            scrollContent.scrollBy({ top: -150, behavior: 'smooth' });
+            break;
+        case 'Swipe Down':
+            scrollContent.scrollBy({ top: 150, behavior: 'smooth' });
+            break;
+        case 'Tap':
+            const now = Date.now();
+            if (now - lastTapTime > TAP_COOLDOWN) {
+                lastTapTime = now;
+                const screenX = window.innerWidth * (1 - gesture.position.x);
+                const screenY = window.innerHeight * gesture.position.y;
+                const element = document.elementFromPoint(screenX, screenY);
+                if (element && element.classList.contains('ui-button')) {
+                    console.log(`Tapped button: ${element.dataset.action}`);
+                    element.click(); // Trigger a click for visual feedback/other scripts
                 }
             }
-        } else if (state.grabbedObject) {
-            // Move the grabbed object
-            state.grabbedObject.position.addVectors(pos, state.offset);
-        }
-
-    } else { // Any other gesture
-        if (state.isGrabbing) {
-            if(state.grabbedObject) state.grabbedObject.userData.isGrabbed = false;
-            state.isGrabbing = false;
-            state.grabbedObject = null;
-        }
+            break;
     }
 }

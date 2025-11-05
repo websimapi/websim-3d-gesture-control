@@ -1,36 +1,45 @@
-import * as scene from './scene.js';
-import * as handTracking from './hand-tracking.js';
 import * as ui from './ui.js';
+import * as handTracking from './hand-tracking.js';
 import * as gestures from './gestures.js';
 import * as interaction from './interaction.js';
 
 async function main() {
     const videoElement = document.getElementById('webcam');
-    const canvasElement = document.getElementById('render-canvas');
-
+    
     ui.showLoading();
 
     try {
-        const sceneManager = scene.init(canvasElement);
-        interaction.init(sceneManager);
+        interaction.init();
 
         const onHandsDetected = (handData) => {
-            sceneManager.updateHandVisuals(handData.landmarks);
-
             let detectedGestures = { left: 'None', right: 'None' };
             
-            handData.landmarks.forEach((landmarks, index) => {
-                const handedness = handData.handedness[index][0].categoryName;
-                const gesture = gestures.detect(landmarks);
+            if (handData.handedness.length > 0) {
+                 handData.landmarks.forEach((landmarks, index) => {
+                    const handedness = handData.handedness[index][0].categoryName;
+                    const gesture = gestures.detect(landmarks);
 
-                if (handedness === 'Left') {
-                    detectedGestures.left = gesture.name;
-                } else if (handedness === 'Right') {
-                    detectedGestures.right = gesture.name;
-                }
-                
-                interaction.handleGesture(gesture, landmarks, index);
-            });
+                    if (handedness === 'Left') {
+                        detectedGestures.left = gesture.name.split(' ')[0]; // Show base gesture
+                    } else if (handedness === 'Right') {
+                        detectedGestures.right = gesture.name.split(' ')[0];
+                    }
+                    
+                    // Prioritize right hand for interaction if both are present
+                    const rightHandIndex = handData.handedness.findIndex(h => h[0].categoryName === 'Right');
+                    if (rightHandIndex !== -1) {
+                         if (index === rightHandIndex) {
+                            interaction.handleGesture(gesture, landmarks, 0);
+                         }
+                    } else {
+                        // If no right hand, use the first detected hand
+                        interaction.handleGesture(gesture, landmarks, 0);
+                    }
+                });
+            } else {
+                interaction.handleGesture({ name: 'None' }, [], 0); // Hide cursor
+            }
+
 
              ui.updateGestureUI(detectedGestures.left, detectedGestures.right);
         };
@@ -43,14 +52,13 @@ async function main() {
         function animate() {
             requestAnimationFrame(animate);
             handTracking.predict();
-            sceneManager.render();
         }
         
         animate();
 
     } catch (error) {
         console.error("Initialization failed:", error);
-        ui.showError("Could not initialize webcam or AI model.");
+        ui.showError("Could not initialize webcam or AI model. Please grant camera permissions and refresh.");
     }
 }
 
