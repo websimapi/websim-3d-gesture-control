@@ -2,6 +2,7 @@ import * as ui from './ui.js';
 import * as handTracking from './hand-tracking.js';
 import * as gestures from './gestures.js';
 import * as interaction from './interaction.js';
+import * as scene from './scene.js';
 
 async function main() {
     const videoElement = document.getElementById('webcam');
@@ -9,12 +10,16 @@ async function main() {
     ui.showLoading();
 
     try {
+        scene.init();
         interaction.init();
 
         const onHandsDetected = (handData) => {
             let detectedGestures = { left: 'None', right: 'None' };
             
-            if (handData.handedness.length > 0) {
+            // Pass hand data to the scene for 3D visualization
+            scene.updateHandVisuals(handData.worldLandmarks, handData.handedness);
+            
+            if (handData.handedness && handData.handedness.length > 0) {
                  handData.landmarks.forEach((landmarks, index) => {
                     const handedness = handData.handedness[index][0].categoryName;
                     const gesture = gestures.detect(landmarks);
@@ -52,6 +57,7 @@ async function main() {
         function animate() {
             requestAnimationFrame(animate);
             handTracking.predict();
+            scene.render();
         }
         
         animate();
