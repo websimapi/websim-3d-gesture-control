@@ -2,15 +2,13 @@
 const THUMB_TIP = 4;
 const INDEX_FINGER_TIP = 8;
 
-export function detect(landmarks) {
-    if (!landmarks || landmarks.length === 0) {
+export function detect(handLandmarks) {
+    if (!handLandmarks || handLandmarks.length === 0) {
         return { name: 'none' };
     }
 
-    const hand = landmarks[0]; // Using the first detected hand
-
-    const thumbTip = hand[THUMB_TIP];
-    const indexTip = hand[INDEX_FINGER_TIP];
+    const thumbTip = handLandmarks[THUMB_TIP];
+    const indexTip = handLandmarks[INDEX_FINGER_TIP];
 
     // Calculate distance between thumb and index finger tips
     const dx = thumbTip.x - indexTip.x;

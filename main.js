@@ -16,8 +16,10 @@ async function main() {
 
         const onHandsDetected = (handData) => {
             sceneManager.updateHandVisuals(handData.landmarks);
-            const gesture = gestures.detect(handData.landmarks);
-            interaction.handleGesture(gesture, handData.landmarks);
+            handData.landmarks.forEach((landmarks, index) => {
+                const gesture = gestures.detect(landmarks);
+                interaction.handleGesture(gesture, landmarks, index);
+            });
         };
         
         await handTracking.init(videoElement, onHandsDetected);
@@ -40,4 +42,3 @@ async function main() {
 }
 
 main();
-

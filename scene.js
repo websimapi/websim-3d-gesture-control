@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 
-let scene, camera, renderer, cube, handLandmarks = [];
+let scene, camera, renderer, cube;
+let allHandLandmarks = [];
 const handMeshes = [];
 
 export function init(canvas) {
@@ -26,13 +27,15 @@ export function init(canvas) {
     // Camera
     camera.position.z = 5;
 
-    // Hand landmark visuals
-    for (let i = 0; i < 21; i++) {
-        const sphereGeo = new THREE.SphereGeometry(0.02, 16, 16);
-        const sphereMat = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-        const sphere = new THREE.Mesh(sphereGeo, sphereMat);
-        handMeshes.push(sphere);
-        scene.add(sphere);
+    // Hand landmark visuals for two hands
+    for (let h = 0; h < 2; h++) {
+        for (let i = 0; i < 21; i++) {
+            const sphereGeo = new THREE.SphereGeometry(0.02, 16, 16);
+            const sphereMat = new THREE.MeshBasicMaterial({ color: h === 0 ? 0xff0000 : 0x0000ff }); // Red for first hand, blue for second
+            const sphere = new THREE.Mesh(sphereGeo, sphereMat);
+            handMeshes.push(sphere);
+            scene.add(sphere);
+        }
     }
     
     window.addEventListener('resize', onWindowResize, false);
@@ -47,12 +50,17 @@ function onWindowResize() {
 }
 
 export function render() {
-    cube.rotation.x += 0.005;
-    cube.rotation.y += 0.005;
+    if (!isGrabbing) {
+        cube.rotation.x += 0.005;
+        cube.rotation.y += 0.005;
+    }
 
     handMeshes.forEach((mesh, i) => {
-        if (handLandmarks && handLandmarks[i]) {
-            const landmark = handLandmarks[i];
+        const handIndex = Math.floor(i / 21);
+        const landmarkIndex = i % 21;
+
+        if (allHandLandmarks[handIndex] && allHandLandmarks[handIndex][landmarkIndex]) {
+            const landmark = allHandLandmarks[handIndex][landmarkIndex];
              // Convert normalized screen coordinates to world coordinates
             const vector = new THREE.Vector3(
                 (landmark.x - 0.5) * 2 * (window.innerWidth / window.innerHeight),
@@ -70,9 +78,17 @@ export function render() {
 }
 
 export function updateHandVisuals(landmarks) {
-    if (landmarks && landmarks.length > 0) {
-        handLandmarks = landmarks[0]; // We'll track the first hand
-    } else {
-        handLandmarks = [];
-    }
+    allHandLandmarks = landmarks;
 }
+
+// A global grabbing state from interaction.js would be better,
+// but for simplicity, we add it here for now to stop rotation.
+let isGrabbing = false;
+
+// We can listen to pinch events, but for now, we'll just check the interaction module's state.
+// This is a bit of a hack. A better solution would be an event system or state manager.
+import * as interaction from './interaction.js';
+Object.defineProperty(interaction, 'isGrabbing', {
+  get: () => isGrabbing,
+  set: (v) => { isGrabbing = v; }
+});

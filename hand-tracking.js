@@ -19,7 +19,7 @@ export async function init(videoElement, callback) {
             delegate: "GPU"
         },
         runningMode: "VIDEO",
-        numHands: 1
+        numHands: 2
     });
 
     await enableWebcam();
@@ -54,4 +54,3 @@ export function predict() {
         }
     }
 }
-
