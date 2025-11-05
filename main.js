@@ -17,22 +17,22 @@ async function main() {
         const onHandsDetected = (handData) => {
             sceneManager.updateHandVisuals(handData.landmarks);
 
-            let gestures = { left: 'None', right: 'None' };
+            let detectedGestures = { left: 'None', right: 'None' };
             
             handData.landmarks.forEach((landmarks, index) => {
                 const handedness = handData.handedness[index][0].categoryName;
                 const gesture = gestures.detect(landmarks);
 
                 if (handedness === 'Left') {
-                    gestures.left = gesture.name;
+                    detectedGestures.left = gesture.name;
                 } else if (handedness === 'Right') {
-                    gestures.right = gesture.name;
+                    detectedGestures.right = gesture.name;
                 }
                 
                 interaction.handleGesture(gesture, landmarks, index);
             });
 
-             ui.updateGestureUI(gestures.left, gestures.right);
+             ui.updateGestureUI(detectedGestures.left, detectedGestures.right);
         };
         
         await handTracking.init(videoElement, onHandsDetected);
