@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { isGrabbing } from './interaction.js';
 
 let scene, camera, renderer, cube;
 let allHandLandmarks = [];
@@ -80,15 +81,3 @@ export function render() {
 export function updateHandVisuals(landmarks) {
     allHandLandmarks = landmarks;
 }
-
-// A global grabbing state from interaction.js would be better,
-// but for simplicity, we add it here for now to stop rotation.
-let isGrabbing = false;
-
-// We can listen to pinch events, but for now, we'll just check the interaction module's state.
-// This is a bit of a hack. A better solution would be an event system or state manager.
-import * as interaction from './interaction.js';
-Object.defineProperty(interaction, 'isGrabbing', {
-  get: () => isGrabbing,
-  set: (v) => { isGrabbing = v; }
-});

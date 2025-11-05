@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 
 let sceneManager;
-let isGrabbing = false;
+export let isGrabbing = false;
 let grabbingHandIndex = -1;
 let grabOffset = new THREE.Vector3();
 
